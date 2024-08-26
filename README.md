@@ -29,7 +29,7 @@ python script.py
 
 This will generate `PTG.json`, which represents page transition graph extracted from the HarmonyOS app project by static analysis. Open the HarmonyOS app project using [DevEco Studio](https://devecostudio.huawei.com/en/). Copy the content in `PTG.json` to `PTGJson` variable in `PTG.ets`. Then copy `Ability.test.ets` and `PTG.ets` to the `src/ohosTest/ets/test` folder in the HarmonyOS app project.
 
-You can choose random strategy or model-based strategy to run with. Create a Huawei Phone Emulator in [DevEco Studio](https://devecostudio.huawei.com/en/). Open the phone and Run `Ability.test.ets` with coverage. Finally you will get a `.test` folder including coverage information of testing.
+You can choose random strategy or model-based strategy to run with. Create a Huawei Phone Emulator in [DevEco Studio](https://devecostudio.huawei.com/en/). Open the phone, set the total testing time and run `Ability.test.ets` with coverage. Finally you will get a `.test` folder including coverage information of testing.
 
 ![image](https://github.com/user-attachments/assets/3ca580d5-cb6d-4f8c-89a3-9136b584d347)
 
