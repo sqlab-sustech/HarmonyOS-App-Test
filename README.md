@@ -4,6 +4,14 @@ This repository contains the artifacts related to HarmonyOS app testing.
 
 ## Document
 
+## Setup
+To run this project, you need the environment as follows.
+
+- Python: Ensure you have Python installed (preferably version 3.x).
+- Node.js: Install Node.js (version 16.x or higher recommended).
+- [DevEco Studio](https://devecostudio.huawei.com/en/): Download and install the latest version of DevEco Studio for HarmonyOS development.
+
+
 ### Usage
 
 Clone the project.
