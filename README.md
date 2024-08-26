@@ -4,7 +4,7 @@ This repository contains the artifacts related to HarmonyOS app testing.
 
 ## Document
 
-## Setup
+### Setup
 To run this project, you need the environment as follows.
 
 - Python: Ensure you have Python installed (preferably version 3.x).
