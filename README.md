@@ -5,6 +5,7 @@ This repository contains the artifacts related to model-based GUI testing for Ha
 ## Document
 
 ### Setup
+
 To run this project, you need the environment as follows.
 
 #### Hardware
@@ -18,7 +19,7 @@ To run this project, you need the environment as follows.
 
 - **Python:** preferably version 3.x
 - **Node.js:** version 16.x or higher recommended
-- **[DevEco Studio](https://developer.huawei.com/consumer/cn/deveco-studio/)**: version 3.1 or 4.0
+- **[DevEco Studio](https://developer.huawei.com/consumer/cn/deveco-studio/)**: version 3.1 or 4.0 (You can install version 3.1 by **deveco-studio-3.1.0.501.exe** provided in this project.)
 
 ### Usage
 
@@ -43,7 +44,7 @@ Then run `script.py`.
 python script.py
 ```
 
-This will generate `PTG.json`, which represents page transition graph extracted from the HarmonyOS app project by static analysis. Open the HarmonyOS app project using DevEco Studio. Copy the content in `PTG.json` to `PTGJson` variable in `PTG.ets`. Then copy `Ability.test.ets` and `PTG.ets` to the `src/ohosTest/ets/test` folder in the HarmonyOS app project.
+This will generate `PTG.json`, which represents page transition graph extracted from the HarmonyOS app project by static analysis. Open the HarmonyOS app project using DevEco Studio, such as **https://github.com/WinWang/HarmoneyOpenEye** project listed in `project.txt`. Copy the content in `PTG.json` to `PTGJson` variable in `PTG.ets`. Then copy `Ability.test.ets` and `PTG.ets` to the `src/ohosTest/ets/test` folder in the HarmonyOS app project.
 
 You can choose random strategy or model-based strategy to run with. Create a Huawei Phone Emulator in DevEco Studio. Open the phone, set the total testing time and run `Ability.test.ets` with coverage. Finally you will get a `.test` folder including coverage information of testing.
 
