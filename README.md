@@ -31,7 +31,7 @@ This will generate `PTG.json`, which represents page transition graph extracted 
 
 You can choose random strategy or model-based strategy to run with. Create a Huawei Phone Emulator in [DevEco Studio](https://devecostudio.huawei.com/en/). Open the phone and Run `Ability.test.ets` with coverage. Finally you will get a `.test` folder including coverage information of testing.
 
-![image](https://github.com/user-attachments/assets/7d6ee967-ead2-4251-9cec-3be9de996367)
+![image](https://github.com/user-attachments/assets/3ca580d5-cb6d-4f8c-89a3-9136b584d347)
 
 ### Demo
 
