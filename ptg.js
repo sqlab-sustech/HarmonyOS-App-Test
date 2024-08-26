@@ -4,7 +4,7 @@ const parser = require("@babel/parser");
 const traverse = require("@babel/traverse").default;
 const types = require("@babel/types");
 
-const WTG = new Map();
+const PTG = new Map();
 
 class CallGraphNode {
   constructor(filename, functionName) {
@@ -37,8 +37,8 @@ const directoryPath = `${project}/build/default/cache/default/default@CompileArk
 const mainPages = JSON.parse(fs.readFileSync(`${project}/src/main/resources/base/profile/main_pages.json`));
 mainPages.src.forEach(name => {
   let filename = `${directoryPath}/${name}.js`
-  if (!WTG.has(filename)) {
-    WTG.set(filename, []);
+  if (!PTG.has(filename)) {
+    PTG.set(filename, []);
   }
 });
 
@@ -215,14 +215,14 @@ function preHandleRoots(filename, ast) {
                     console.error('PageNode Error!');
                   }
                   let flag = true;
-                  for (const [w, a, u] of WTG.get(curRootPage)) {
+                  for (const [w, a, u] of PTG.get(curRootPage)) {
                     if (widget === w && action === a && url === u) {
                       flag = false;
                       break;
                     }
                   }
                   if (flag) {
-                    WTG.get(curRootPage).push([widget, action, url]);
+                    PTG.get(curRootPage).push([widget, action, url]);
                   }
                 }
                 break;
@@ -269,7 +269,7 @@ function preHandleRoots(filename, ast) {
   });
 }
 
-function buildWTG() {
+function buildPTG() {
   function dfs(callGraphNode, parentNode, targetPage, argumentIndex) {
     let functionCode = functions.get(callGraphNode.filename)?.get(callGraphNode.functionName);
     let ast;
@@ -309,7 +309,6 @@ function buildWTG() {
             }
           }
 
-          // 从router.pushUrl调用向上寻找可能的控件和行为
           let currentPath = path;
           while (currentPath.parentPath) {
             currentPath = currentPath.parentPath;
@@ -334,14 +333,14 @@ function buildWTG() {
                   }
                   for (let curRootPage of curRootPages) {
                     let flag = true;
-                    for (const [w, a, u] of WTG.get(curRootPage)) {
+                    for (const [w, a, u] of PTG.get(curRootPage)) {
                       if (widget === w && action === a && targetPage === u) {
                         flag = false;
                         break;
                       }
                     }
                     if (flag) {
-                      WTG.get(curRootPage).push([widget, action, targetPage]);
+                      PTG.get(curRootPage).push([widget, action, targetPage]);
                     }
                   }
                   return;
@@ -419,9 +418,9 @@ for (const [filename, ast] of asts) {
   preHandleRoots(filename, ast);
 }
 
-buildWTG();
+buildPTG();
 
-let obj = Object.fromEntries(Array.from(WTG).map(([key, value]) => [key.substring(directoryPath.length + 1, key.lastIndexOf('.js')), Array.from(value)]));
+let obj = Object.fromEntries(Array.from(PTG).map(([key, value]) => [key.substring(directoryPath.length + 1, key.lastIndexOf('.js')), Array.from(value)]));
 Object.keys(obj).forEach(key => {
   value = obj[key];
   for (let arr of value) {
@@ -429,7 +428,7 @@ Object.keys(obj).forEach(key => {
   }
   console.log(key, value)
 });
-let jsonString = JSON.stringify(obj, null, 2); // 使用缩进增强可读性
+let jsonString = JSON.stringify(obj, null, 2);
 
 fs.writeFileSync('./PTG.json', jsonString);
-// fs.writeFileSync(`${basePath}/src/ohosTest/ets/test/WTG.ets`, `const WTGJson = \`${jsonString}\`; export default WTGJson;`);
+// fs.writeFileSync(`${basePath}/src/ohosTest/ets/test/PTG.ets`, `const PTGJson = \`${jsonString}\`; export default PTGJson;`);
