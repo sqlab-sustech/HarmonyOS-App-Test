@@ -15,11 +15,19 @@ function sleep(time: number) {
 
 class ModelTest {
   driver: Driver
-  PTG: Map<string, Set<Array<string>>>
+  PTG: Map<string, Array<{
+    component: { type },
+    event,
+    target
+  }>>
   vis: Set<string>
   count: number
 
-  constructor(driver: Driver, PTG: Map<string, Set<Array<string>>>) {
+  constructor(driver: Driver, PTG: Map<string, Array<{
+    component: { type },
+    event,
+    target
+  }>>) {
     this.driver = driver;
     this.PTG = PTG;
     this.vis = new Set<string>();
@@ -50,12 +58,14 @@ class ModelTest {
       return;
     }
 
-      const doAction = async () => {
-        for (let [widget, action, childPage] of children) {
+    const doAction = async () => {
+      // for (let [type, event, childPage] of children) {
+      for (let obj of children) {
+        for (let [cur, { component: { type }, event, target }] of Object.entries(obj)) {
           let originPage = router.getState().path + router.getState().name;
-          let components = await this.driver.findComponents(ON.type(widget));
+          let components = await this.driver.findComponents(ON.type(type));
           if (components) {
-            if (widget === 'ListItem' || widget === 'GridItem') {
+            if (type === 'ListItem' || type === 'GridItem') {
               components = [components[0]];
             }
             for (let component of components) {
@@ -64,14 +74,14 @@ class ModelTest {
                 await this.test();
                 page = router.getState().path + router.getState().name;
               }
-              if (action === 'onClick') {
+              if (event === 'onClick') {
                 await component.click();
                 this.count++;
                 hilog.info(0x0000, 'testTag', '%{public}s', `action count: ${this.count}}`);
               }
               await this.driver.delayMs(2000);
               page = router.getState().path + router.getState().name;
-              if (page === childPage) {
+              if (page === target) {
                 hilog.info(0x0000, 'testTag', '%{public}s', `currentPage: ${router.getState().path + router.getState()
                   .name}`);
                 await this.test();
@@ -86,57 +96,58 @@ class ModelTest {
           }
         }
       }
+    }
 
-      const randomAction = async () => {
-        for (let i = 0; i < 10; i++) {
-          // let x = Math.random();
-          // if (x <= 0.5) {
-          //   await this.componentScrollToBottom();
-          // } else {
-          //   await this.componentScrollToTop();
+    const randomAction = async () => {
+      for (let i = 0; i < 10; i++) {
+        // let x = Math.random();
+        // if (x <= 0.5) {
+        //   await this.componentScrollToBottom();
+        // } else {
+        //   await this.componentScrollToTop();
+        // }
+        await this.componentClick();
+        await this.driver.delayMs(2000);
+        let page = router.getState().path + router.getState().name;
+        if (!this.vis.has(page) && page !== curPage) {
+          await this.test();
+        }
+      }
+    }
+
+    let tabBars = await this.driver.findComponents(ON.type('TabBar'));
+    if (tabBars) {
+      for (let tabBar of tabBars) {
+        let tabBarNum = 4;
+        let bounds = await tabBar.getBounds();
+        let left = bounds.left, right = bounds.right, top = bounds.top, bottom = bounds.bottom;
+        let d = Math.round((right - left) / tabBarNum);
+        for (let i = 1; i <= tabBarNum; i++) {
+          // let cs = await this.driver.findComponents(ON.enabled(true));
+          // while (true) {
+          //   await this.driver.click(i * d - 20, top);
+          //   let ncs = await this.driver.findComponents(ON.enabled(true));
+          //   if (cs.length !== ncs.length) {
+          //     break;
+          //   }
           // }
-          await this.componentClick();
+          // for (let j = 0; j < 5; j++) {
+          await this.driver.click(i * d - 20, top);
+          // await this.driver.delayMs(1000);
+          // }
+
+          // 594, 2790
           await this.driver.delayMs(2000);
-          let page = router.getState().path + router.getState().name;
-          if (!this.vis.has(page) && page !== curPage) {
-            await this.test();
+          await doAction();
+          if (i == 4) {
+            // await randomAction();
           }
         }
       }
-
-      let tabBars = await this.driver.findComponents(ON.type('TabBar'));
-      if (tabBars) {
-        for (let tabBar of tabBars) {
-          let tabBarNum = 4;
-          let bounds = await tabBar.getBounds();
-          let left = bounds.left, right = bounds.right, top = bounds.top, bottom = bounds.bottom;
-          let d = Math.round((right - left) / tabBarNum);
-          for (let i = 1; i <= tabBarNum; i++) {
-            // let cs = await this.driver.findComponents(ON.enabled(true));
-            // while (true) {
-            //   await this.driver.click(i * d - 20, top);
-            //   let ncs = await this.driver.findComponents(ON.enabled(true));
-            //   if (cs.length !== ncs.length) {
-            //     break;
-            //   }
-            // }
-            // for (let j = 0; j < 5; j++) {
-              await this.driver.click(i * d - 20, top);
-              // await this.driver.delayMs(1000);
-            // }
-
-            // 594, 2790
-            await this.driver.delayMs(2000);
-            await doAction();
-            if (i == 4) {
-              // await randomAction();
-            }
-          }
-        }
-      } else {
-        await doAction();
-        // await randomAction();
-      }
+    } else {
+      await doAction();
+      // await randomAction();
+    }
     await this.driver.delayMs(2000);
     await this.driver.pressBack();
     await this.driver.delayMs(2000);
@@ -414,18 +425,15 @@ export default function abilityTest() {
         expect(Ability.context.abilityInfo.name).assertEqual('EntryAbility');
       })
 
-      let obj: { [key: string]: Array<[string, string, string]> } = JSON.parse(PTGJson);
+      let ptg = JSON.parse(PTGJson);
       const project = 'HarmoneyOpenEye';
       const prefix = `D:/project/CS490/${project}/entry/build/default/cache/default/default@CompileArkTS/esmodule/debug/entry/src/main/ets/`;
       const PTG = new Map();
-      for (let [pageName, actions] of Object.entries(obj)) {
-        // pageName = pageName.substring(prefix.length, pageName.lastIndexOf('.js'));
-        // console.log(pageName, actions);
-        PTG.set(pageName, new Set());
-        for (const action of actions) {
-          // action[2] = action[2].substring(prefix.length, action[2].lastIndexOf('.js'));
-          PTG.get(pageName).add(action);
-        }
+      for (let [pageName, obj] of Object.entries(ptg)) {
+        PTG.set(pageName, []);
+        // for (const {component:{type},event,targetPage}) {
+        PTG.get(pageName).push(obj);
+        // }
       }
 
       // UI test code
@@ -434,8 +442,9 @@ export default function abilityTest() {
       await driver.delayMs(1000);
       const root = await driver.findComponent(ON.type('root'));
       const bound = await root.getBounds();
-      // const randomTest: RandomTest = new RandomTest(driver, bound.left, bound.right, bound.top, bound.bottom);
+      const randomTest: RandomTest = new RandomTest(driver, bound.left, bound.right, bound.top, bound.bottom);
       const modelTest: ModelTest = new ModelTest(driver, PTG);
+      // await randomTest.test();
       await modelTest.test();
       done();
     })
