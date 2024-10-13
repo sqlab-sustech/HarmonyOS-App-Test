@@ -438,5 +438,5 @@ Object.keys(obj).forEach(key => {
 });
 let jsonString = JSON.stringify(obj, null, 2);
 
-fs.writeFileSync('./PTG.json', jsonString);
-// fs.writeFileSync(`${basePath}/src/ohosTest/ets/test/PTG.ets`, `const PTGJson = \`${jsonString}\`; export default PTGJson;`);
+// fs.writeFileSync('./PTG.json', jsonString);
+fs.writeFileSync(`./PTG.ets`, `const PTGJson = \`${jsonString}\`;\nexport default PTGJson;`);
