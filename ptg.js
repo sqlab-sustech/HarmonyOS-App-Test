@@ -119,7 +119,7 @@ function preHandleConstant(filename, ast) {
         types.isIdentifier(path.node.left.property)) {
         const objectName = path.node.left.object.name;
         const propertyName = path.node.left.property.name;
-        if (classes.has(objectName)) { // 检查是否为类的静态属性
+        if (classes.has(objectName)) { // check static property
           let value = path.node.right.value;
           if (types.isStringLiteral(path.node.right)) {
             if (!classConstants.has(objectName)) {
@@ -142,7 +142,7 @@ function preHandleFunctionAsts(filename, ast) {
   traverse(ast, {
     FunctionDeclaration(path) {
       const functionName = path.node.id.name;
-      const {start, end} = path.node;
+      const { start, end } = path.node;
       if (start !== undefined && end !== undefined) {
         const functionSourceCode = code.substring(start, end);
         if (!functions.has(filename)) {
@@ -153,7 +153,7 @@ function preHandleFunctionAsts(filename, ast) {
       }
     },
     ClassDeclaration(path) {
-      const {start, end} = path.node;
+      const { start, end } = path.node;
       const functionSourceCode = code.substring(start, end);
       path.traverse({
         ClassMethod(innerPath) {
@@ -215,14 +215,22 @@ function preHandleRoots(filename, ast) {
                     console.error('PageNode Error!');
                   }
                   let flag = true;
-                  for (const [w, a, u] of PTG.get(curRootPage)) {
-                    if (widget === w && action === a && url === u) {
+                  for (const { component: { type: t }, event: a, target: tp } of PTG.get(curRootPage)) {
+                    if (widget === t && action === a && url === tp) {
                       flag = false;
                       break;
                     }
                   }
                   if (flag) {
-                    PTG.get(curRootPage).push([widget, action, url]);
+                    PTG.get(curRootPage).push([
+                      {
+                        component: {
+                          type: widget,
+                        },
+                        event: action,
+                        target: url
+                      }
+                    ])
                   }
                 }
                 break;
@@ -286,7 +294,6 @@ function buildPTG() {
     traverse(ast, {
       CallExpression(path) {
         if (path.node.callee.object && path.node.callee.property.name === parentNode?.functionName) {
-          // 提取跳转页面URL
           if (!targetPage) {
             if (parentNode?.argumentIndex !== null && parentNode?.argumentIndex !== undefined && parentNode?.argumentIndex >= 0) {
               let idx = parentNode.argumentIndex;
@@ -327,20 +334,25 @@ function buildPTG() {
                   }
                   console.log(`Current Page: ${pageName}, Component: ${widget}, Event: ${action}, Target Page: ${targetPage}`);
                   let curRootPages = pageRoots.get(pageName);
-                  // TODO: Solve two components with the same name
                   if (!curRootPages) {
                     break;
                   }
                   for (let curRootPage of curRootPages) {
                     let flag = true;
-                    for (const [w, a, u] of PTG.get(curRootPage)) {
-                      if (widget === w && action === a && targetPage === u) {
+                    for (const { component: { type: t }, event: a, target: tp } of PTG.get(curRootPage)) {
+                      if (widget === t && action === a && targetPage === tp) {
                         flag = false;
                         break;
                       }
                     }
                     if (flag) {
-                      PTG.get(curRootPage).push([widget, action, targetPage]);
+                      PTG.get(curRootPage).push({
+                        component: {
+                          type: widget,
+                        },
+                        event: action,
+                        target: targetPage
+                      });
                     }
                   }
                   return;
@@ -365,11 +377,8 @@ function buildPTG() {
   }
 }
 
-fileNum = 0
-lineOfCode = 0
-
 function walkDir(directoryPath) {
-  const entries = fs.readdirSync(directoryPath, {withFileTypes: true});
+  const entries = fs.readdirSync(directoryPath, { withFileTypes: true });
   entries.forEach(entry => {
     let entryPath = path.join(directoryPath, entry.name);
     entryPath = entryPath.replace(/\\/g, '/');
@@ -423,10 +432,9 @@ buildPTG();
 let obj = Object.fromEntries(Array.from(PTG).map(([key, value]) => [key.substring(directoryPath.length + 1, key.lastIndexOf('.js')), Array.from(value)]));
 Object.keys(obj).forEach(key => {
   value = obj[key];
-  for (let arr of value) {
-    arr[2] = arr[2].substring(directoryPath.length + 1, arr[2].lastIndexOf('.js'));
+  for (let obj of value) {
+    obj.target = obj.target.substring(directoryPath.length + 1, obj.target.lastIndexOf('.js'));
   }
-  console.log(key, value)
 });
 let jsonString = JSON.stringify(obj, null, 2);
 
