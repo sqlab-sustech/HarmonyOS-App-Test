@@ -52,4 +52,4 @@ You can choose random strategy or model-based strategy to run with. Create a Hua
 
 ### Demo
 
-The demo video for this project is available at [Model-based GUI Testing For HarmonyOS Apps](https://www.youtube.com/watch?v=dgZWkHiBYbA). 
+The demo video for this project is available at [Model-Based GUI Testing for HarmonyOS Apps](https://www.youtube.com/watch?v=dgZWkHiBYbA). 
