@@ -31,8 +31,8 @@ const pageRoots = new Map();
 
 const project = process.argv[2];
 const basePath = `${project}/build/default/cache/default/default@CompileArkTS/esmodule/debug`
-// const directoryPath = `${project}/build/default/cache/default/default@CompileArkTS/esmodule/debug/product/phone/src/main/ets`; // 修改为你的目录路径
-const directoryPath = `${project}/build/default/cache/default/default@CompileArkTS/esmodule/debug/entry/src/main/ets`; // 修改为你的目录路径
+// const directoryPath = `${project}/build/default/cache/default/default@CompileArkTS/esmodule/debug/product/phone/src/main/ets`;
+const directoryPath = `${project}/build/default/cache/default/default@CompileArkTS/esmodule/debug/entry/src/main/ets`;
 
 const mainPages = JSON.parse(fs.readFileSync(`${project}/src/main/resources/base/profile/main_pages.json`));
 mainPages.src.forEach(name => {
@@ -83,8 +83,40 @@ function preHandleClass(filename, ast) {
   })
 }
 
+let componentCallIdentifier = null;
+let componentCallClassName = null;
+
 function preHandlePageGraph(filename, ast) {
   traverse(ast, {
+    // NewExpression(path) {
+    //   if (path.parent.id.name === componentCallIdentifier) {
+    //     let subPageFile = path.node.callee.name;
+    //   }
+    // },
+    VariableDeclaration(path) {
+      // console.log(path);
+      if (path.node.declarations.at(0).id.name === 'componentCall' && path.node.declarations.at(0).init?.type === 'SequenceExpression') {
+        let expressions = path.node.declarations.at(0).init?.expressions;
+        if (expressions.length >= 2 && expressions[1].type === 'NewExpression') {
+          const pageName = expressions[1].callee.name;
+          let subPageFile = classes.get(pageName);
+          if (!subPageFile) {
+            subPageFile = classes.get(pageName[0].toUpperCase() + pageName.substring(1));
+            if (!subPageFile) {
+              console.log(pageName, subPageFile);
+              throw new Error('Page Not Found!');
+            }
+          }
+          if (!pageGraph.has(filename)) {
+            pageGraph.set(filename, new Set());
+          }
+          if (filename !== subPageFile) {
+            pageGraph.get(filename).add(subPageFile);
+            console.log(`${filename.substring(filename.lastIndexOf('/') + 1)} -> ${subPageFile.substring(subPageFile.lastIndexOf('/') + 1)}`);
+          }
+        }
+      }
+    },
     CallExpression(path) {
       if (path.node.callee.object && path.node.callee.object.name === 'ViewPU' && path.node.callee.property.name === 'create') {
         path.node.arguments.forEach(arg => {
@@ -105,6 +137,11 @@ function preHandlePageGraph(filename, ast) {
               console.log(`${filename.substring(filename.lastIndexOf('/') + 1)} -> ${subPageFile.substring(subPageFile.lastIndexOf('/') + 1)}`);
             }
           }
+          // else if (types.isIdentifier(arg)) {
+          //   if (arg.name === 'componentCall') {
+
+          //   }
+          // }
         });
       }
     }
@@ -222,7 +259,7 @@ function preHandleRoots(filename, ast) {
                     }
                   }
                   if (flag) {
-                    PTG.get(curRootPage).push([
+                    PTG.get(curRootPage).push(
                       {
                         component: {
                           type: widget,
@@ -230,7 +267,7 @@ function preHandleRoots(filename, ast) {
                         event: action,
                         target: url
                       }
-                    ])
+                    )
                   }
                 }
                 break;
@@ -439,4 +476,4 @@ Object.keys(obj).forEach(key => {
 let jsonString = JSON.stringify(obj, null, 2);
 
 // fs.writeFileSync('./PTG.json', jsonString);
-fs.writeFileSync(`./PTG.ets`, `const PTGJson = \`${jsonString}\`;\nexport default PTGJson;`);
+fs.writeFileSync(`./PTG.ets`, `const PTGJson = \`${jsonString}\`;\nexport default PTGJson;\n`);
